@@ -24,7 +24,7 @@ class ParametricSwishFunction : public Function<ParametricSwishFunction> {
     const auto &grad_output = grad_outputs[0];
 
     // d/dx [x * sigmoid(beta*x)] = sigmoid(beta*x) + x * beta * sigmoid(beta*x) * (1 - sigmoid(beta*x))
-    auto dydx = s + x * s * (1 - s);
+    auto dydx = s + beta * x * s * (1 - s);
     auto grad_x = grad_output * dydx;
 
     // d/dbeta [x * sigmoid(beta*x)] = x^2 * sigmoid(beta*x) * (1 - sigmoid(beta*x)), summed since beta is scalar
