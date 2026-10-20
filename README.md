@@ -6,9 +6,11 @@ A hand-written PyTorch C++ extension implementing **Parametric Swish** — `y = 
 
 This is deliberately *not* a pybind11-wrapped black box. `TORCH_LIBRARY` registration is the same mechanism PyTorch's own operators use, so the op is visible to `torch.ops.*` directly — closer to how a real framework component is exposed than an ad-hoc Python binding would be. The point isn't the activation function itself (parametric Swish variants are well known); it's the same discipline as the other two projects in this portfolio: derive the method by hand, write tests that would catch a wrong derivation, and actually catch one.
 
-## The bug this project's tests caught
+## Mutation testing: proving the test suite actually catches a wrong derivative
 
-The first working version of `backward()` (see git history) shipped with a seeded bug in the gradient with respect to `x`:
+To check the gradcheck suite below was actually doing its job — not just passing because the implementation happened to be right the first time — I deliberately broke the backward pass after writing the tests, confirmed they failed, then restored the fix. This is a standard technique called **mutation testing**: introduce a known defect ("mutant") and verify your tests detect it, as evidence the tests have real power to catch mistakes, not just a self-fulfilling pass.
+
+The injected mutant was a dropped `beta` factor in the gradient with respect to `x`:
 
 ```cpp
 // d/dx [x * sigmoid(beta*x)] = sigmoid(beta*x) + x * beta * sigmoid(beta*x) * (1 - sigmoid(beta*x))
@@ -17,9 +19,9 @@ auto dydx = s + x * s * (1 - s);   // <- missing the beta factor
 
 The comment directly above the bug states the correct derivative in words — the kind of drift between a comment and the code beside it that's easy to introduce during a refactor and easy to miss in review, since the code still compiles and still produces plausible-looking numbers. The bug is also invisible at `beta=1` (the missing factor is multiplied by 1), so a quick manual check at default settings would not have caught it.
 
-`tests/test_parametric_swish.py::test_gradcheck_against_x` uses `torch.autograd.gradcheck` (finite-difference numerical differentiation) to compare the analytic backward pass against a numerical one, for randomised `beta != 1`. That test — and `test_gradcheck_against_both_simultaneously` — failed against the seeded version; `test_gradcheck_against_beta` and the forward-value tests passed, which narrowed the bug to the `dy/dx` term specifically before looking at the diff. `cpp_tests/smoke_test.cpp` independently reproduces the same failure against one hand-computed value at `beta=1.5`, for anyone who wants to step through it in a debugger instead of via pytest.
+`tests/test_parametric_swish.py::test_gradcheck_against_x` uses `torch.autograd.gradcheck` (finite-difference numerical differentiation) to compare the analytic backward pass against a numerical one, for randomised `beta != 1`. That test — and `test_gradcheck_against_both_simultaneously` — failed against the mutated version; `test_gradcheck_against_beta` and the forward-value tests passed, which narrowed the mutant to the `dy/dx` term specifically before looking at the diff. `cpp_tests/smoke_test.cpp` independently reproduces the same failure against one hand-computed value at `beta=1.5`, for anyone who wants to step through it in a debugger instead of via pytest.
 
-The actual commit history: a scaffold commit (bug present), a commit adding the gradcheck suite (and showing it fail), and a fix commit restoring the missing factor. `git log -p` on this repo shows the real diff and the real failing test output, not a reconstruction.
+The actual commit history: a scaffold commit (mutant present), a commit adding the gradcheck suite (and showing it fail against the mutant), and a fix commit restoring the correct factor. `git log -p` on this repo shows the real diff and the real failing test output, not a reconstruction.
 
 ## What's in here
 
