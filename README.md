@@ -1,10 +1,10 @@
 # Parametric Swish: a custom PyTorch C++ operator, built with CMake
 
-A hand-written PyTorch C++ extension implementing **Parametric Swish** — `y = x * sigmoid(beta * x)` — where `beta` is a *learnable* scalar parameter rather than the fixed `beta=1` of standard SiLU/Swish. The op is a `torch::autograd::Function` with a manually-derived forward and backward, registered as a first-class PyTorch operator (`torch.ops.parametric_swish_ops.parametric_swish`) via `TORCH_LIBRARY`, and built with CMake rather than `setup.py`.
+A PyTorch C++ extension implementing **Parametric Swish** — `y = x * sigmoid(beta * x)` where `beta` is a *learnable* scalar parameter rather than the fixed `beta=1` of standard SiLU/Swish. The op is a `torch::autograd::Function` with the forward and backward passes written as a torch::autograd::Function, registered as a first-class PyTorch operator (`torch.ops.parametric_swish_ops.parametric_swish`) via `TORCH_LIBRARY`, and built with CMake rather than `setup.py`.
 
 ## Why this project exists
 
-This is deliberately *not* a pybind11-wrapped black box. `TORCH_LIBRARY` registration is the same mechanism PyTorch's own operators use, so the op is visible to `torch.ops.*` directly — closer to how a real framework component is exposed than an ad-hoc Python binding would be. The point isn't the activation function itself (parametric Swish variants are well known); it's the same discipline as the other two projects in this portfolio: derive the method by hand, write tests that would catch a wrong derivation, and actually catch one.
+This is deliberately *not* a pybind11-wrapped black box. `TORCH_LIBRARY` registration is the same mechanism PyTorch's own operators use, so the op is visible to `torch.ops.*` directly — closer to how a real framework component is exposed than an ad-hoc Python binding would be. The point isn't the activation function itself (parametric Swish variants are well known); it's the same discipline as the other two projects in this portfolio: implement the method, write tests that would catch a wrong derivation, and check that they do.
 
 ## A bug the test suite caught right after it was written
 
