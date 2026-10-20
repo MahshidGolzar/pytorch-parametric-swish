@@ -34,8 +34,8 @@ def test_forward_scales_with_beta():
 
 def test_gradcheck_against_x():
     # Finite-difference check of the gradient w.r.t. x: this is the test that
-    # catches the seeded bug described in the README (a missing beta factor
-    # in d/dx), because gradcheck compares the analytic backward() against
+    # catches the bug deliberately included in the first commit (see README;
+    # a missing beta factor in d/dx), because gradcheck compares the analytic backward() against
     # numerical differentiation rather than against another formula we might
     # have gotten wrong in the same way.
     torch.manual_seed(0)

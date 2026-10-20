@@ -8,7 +8,7 @@ This is deliberately *not* a pybind11-wrapped black box. `TORCH_LIBRARY` registr
 
 ## A bug the test suite caught right after it was written
 
-The first commit's `backward()` had a bug in it from the start: a dropped `beta` factor in the gradient with respect to `x`. The second commit added the `gradcheck`-based test suite below, which failed against that bug immediately — not a case of breaking previously-working code to check the tests, but of the tests catching a defect that was already there as soon as they existed.
+The first commit's `backward()` had a bug deliberately included in it: a dropped `beta` factor in the gradient with respect to `x`, written in on purpose to demonstrate that the test suite below would catch it. The second commit added the `gradcheck`-based test suite, which failed against that bug immediately — not a case of breaking previously-working code to check the tests, but of the tests catching a defect that was there by design as soon as they existed.
 
 ```cpp
 // d/dx [x * sigmoid(beta*x)] = sigmoid(beta*x) + x * beta * sigmoid(beta*x) * (1 - sigmoid(beta*x))
@@ -19,7 +19,7 @@ The comment directly above the bug states the correct derivative in words — th
 
 `tests/test_parametric_swish.py::test_gradcheck_against_x` uses `torch.autograd.gradcheck` (finite-difference numerical differentiation) to compare the analytic backward pass against a numerical one, for randomised `beta != 1`. That test — and `test_gradcheck_against_both_simultaneously` — failed against the faulty version; `test_gradcheck_against_beta` and the forward-value tests passed, which narrowed the fault to the `dy/dx` term specifically before looking at the diff. `cpp_tests/smoke_test.cpp` independently reproduces the same failure against one hand-computed value at `beta=1.5`, for anyone who wants to step through it in a debugger instead of via pytest.
 
-The original three commits: a scaffold commit (bug present), a commit adding the gradcheck suite (failing against it), and a fix commit restoring the correct factor. (The repo has more commits than that now, from later polish — these three are the bug/test/fix sequence specifically.)
+The original three commits: a scaffold commit (bug deliberately included), a commit adding the gradcheck suite (failing against it), and a fix commit restoring the correct factor. (The repo has more commits than that now, from later polish — these three are the bug/test/fix sequence specifically.)
 
 ## What's in here
 

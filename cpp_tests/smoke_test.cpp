@@ -3,8 +3,9 @@
 // This exists so the op can be stepped through directly in a debugger
 // (gdb/lldb/Visual Studio) rather than through several layers of Python ->
 // pybind-style dispatch -> C++. Run it under a debugger and break on
-// ParametricSwishFunction::backward to see exactly where the seeded bug
-// (see README) produced a wrong gradient.
+// ParametricSwishFunction::backward to see exactly where the bug
+// deliberately included in the first commit (see README) produced a
+// wrong gradient.
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
